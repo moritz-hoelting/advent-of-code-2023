@@ -3,8 +3,11 @@ resolver = "2"
 members = [
     "day-01",
     "day-02",
-    "day-03"
+    "day-03",
+    "day-05"
 ]
 
 [workspace.dependencies]
+itertools = "0.12.0"
 nom = "7.1.3"
+rayon = "1.8.0"
