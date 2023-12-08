@@ -1,0 +1,12 @@
+[package]
+name = "day-08"
+version = "0.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+indoc.workspace = true
+itertools.workspace = true
+nom.workspace = true
+num = "0.4.1"
