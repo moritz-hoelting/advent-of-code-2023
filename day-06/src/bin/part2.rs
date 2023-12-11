@@ -51,15 +51,15 @@ mod tests {
     use indoc::indoc;
 
     #[test]
-    fn test_part1() {
+    fn test_part2() {
         assert_eq!(
             part2(indoc!(
                 "
-        Time:      7  15   30
-        Distance:  9  40  200
-        "
+            Time:      7  15   30
+            Distance:  9  40  200
+            "
             )),
-            288
+            71503
         );
     }
 }
