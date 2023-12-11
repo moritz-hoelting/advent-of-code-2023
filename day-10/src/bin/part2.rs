@@ -1,12 +1,12 @@
-use std::iter;
+use std::{collections::BTreeMap, iter};
 
 use itertools::Itertools;
 
 fn main() {
-    println!("{}", part1(include_str!("./input.txt")));
+    println!("{}", part2(include_str!("./input.txt")));
 }
 
-fn part1(input: &str) -> usize {
+fn part2(input: &str) -> usize {
     let pipes = input
         .lines()
         .enumerate()
@@ -23,25 +23,31 @@ fn part1(input: &str) -> usize {
         .find(|p| p.pipe_type == PipeType::Starting)
         .expect("no starting pipe found");
 
+    let mut starting_directions = Vec::new();
+
     let mut starting = Vec::with_capacity(2);
     if starting_pipe.pipe_type.has_pos_x() {
         if let Some(pipe) = starting_pipe.get_pos_x(&pipes) {
             starting.push((Direction::Left, pipe));
+            starting_directions.push(Direction::Right);
         }
     }
     if starting_pipe.pipe_type.has_neg_x() {
         if let Some(pipe) = starting_pipe.get_neg_x(&pipes) {
             starting.push((Direction::Right, pipe));
+            starting_directions.push(Direction::Left);
         }
     }
     if starting_pipe.pipe_type.has_pos_y() {
         if let Some(pipe) = starting_pipe.get_pos_y(&pipes) {
             starting.push((Direction::Up, pipe));
+            starting_directions.push(Direction::Down);
         }
     }
     if starting_pipe.pipe_type.has_neg_y() {
         if let Some(pipe) = starting_pipe.get_neg_y(&pipes) {
             starting.push((Direction::Down, pipe));
+            starting_directions.push(Direction::Up);
         }
     }
 
@@ -51,11 +57,66 @@ fn part1(input: &str) -> usize {
         .collect_tuple()
         .expect("more than 2 paths");
 
-    path_a
+    let starting_pipe_type = match starting_directions
+        .into_iter()
+        .collect_tuple()
+        .expect("more than than two paths")
+    {
+        (Direction::Down, Direction::Up) => PipeType::Vertical,
+        (Direction::Right, Direction::Left) => PipeType::Horizontal,
+        (Direction::Right, Direction::Down) => PipeType::SouthEast,
+        (Direction::Right, Direction::Up) => PipeType::NorthEast,
+        (Direction::Left, Direction::Down) => PipeType::SouthWest,
+        (Direction::Left, Direction::Up) => PipeType::NorthWest,
+        _ => unreachable!("pipe type does not exist"),
+    };
+
+    let mut path_elements = BTreeMap::new();
+    path_elements.insert((starting_pipe.x, starting_pipe.y), starting_pipe_type);
+
+    let (a, b): (Vec<_>, Vec<_>) = path_a
         .zip(path_b)
         .take_while(|((_, pipe_a), (_, pipe_b))| pipe_a != pipe_b)
-        .count()
-        + 1
+        .unzip();
+    let mut path = a.into_iter().chain(b).collect::<Vec<_>>();
+    let (last_direction, last_pipe) = path.last().expect("no last element");
+    path.push(
+        last_pipe
+            .successor(*last_direction, &pipes)
+            .expect("no successor"),
+    );
+    path.iter().for_each(|(_, pipe)| {
+        path_elements.insert((pipe.x, pipe.y), pipe.pipe_type);
+    });
+
+    let width = pipes.get(0).expect("no pipes").len();
+
+    let inner = pipes
+        .iter()
+        .flatten()
+        .filter(|p| {
+            if path_elements.contains_key(&(p.x, p.y)) {
+                false
+            } else {
+                let amount = (p.x..width)
+                    .filter(|x| {
+                        let pipe = path_elements.get(&(*x, p.y));
+                        pipe.map(|pipe| {
+                            matches!(
+                                *pipe,
+                                PipeType::Vertical | PipeType::NorthEast | PipeType::NorthWest
+                            )
+                        })
+                        .unwrap_or(false)
+                    })
+                    .count();
+
+                amount % 2 == 1
+            }
+        })
+        .collect::<Vec<_>>();
+
+    inner.len()
 }
 
 #[derive(Debug, PartialEq, Clone, Eq, Hash, Copy)]
@@ -200,18 +261,41 @@ mod tests {
     use indoc::indoc;
 
     #[test]
-    fn test_part1() {
+    fn test_part2() {
+        // assert_eq!(
+        //     part2(indoc!(
+        //         "
+        //         FF7FSF7F7F7F7F7F---7
+        //         L|LJ||||||||||||F--J
+        //         FL-7LJLJ||||||LJL-77
+        //         F--JF--7||LJLJ7F7FJ-
+        //         L---JF-JLJ.||-FJLJJ7
+        //         |F|F-JF---7F7-L7L|7|
+        //         |FFJF7L7F-JF7|JL---7
+        //         7-L-JL7||F7|L7F-7F7|
+        //         L.L7LFJ|||||FJL7||LJ
+        //         L7JLJL-JLJLJL--JLJ.L
+        //         "
+        //     )),
+        //     10
+        // );
+
         assert_eq!(
-            part1(indoc!(
+            part2(indoc!(
                 "
-                ..F7.
-                .FJ|.
-                SJ.L7
-                |F--J
-                LJ...
-                "
+            .F----7F7F7F7F-7....
+            .|F--7||||||||FJ....
+            .||.FJ||||||||L7....
+            FJL7L7LJLJ||LJ.L-7..
+            L--J.L7...LJS7F-7L7.
+            ....F-J..F7FJ|L7L7L7
+            ....L7.F7||L7|.L7L7|
+            .....|FJLJ|FJ|F7|.LJ
+            ....FJL-7.||.||||...
+            ....L---J.LJ.LJLJ...
+            "
             )),
             8
-        );
+        )
     }
 }

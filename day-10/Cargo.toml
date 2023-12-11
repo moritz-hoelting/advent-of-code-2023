@@ -7,8 +7,6 @@ edition = "2021"
 
 [dependencies]
 itertools.workspace = true
-pathfinding = "4.4.0"
-rayon.workspace = true
 
 [dev-dependencies]
 indoc.workspace = true
