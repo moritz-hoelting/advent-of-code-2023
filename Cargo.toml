@@ -4,7 +4,8 @@ members = [
     "day-*"
 ]
 exclude = [
-    "day-04"
+    "day-04",
+    "day-15"
 ]
 
 [workspace.dependencies]
