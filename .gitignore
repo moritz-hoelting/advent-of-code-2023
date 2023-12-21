@@ -1,2 +1,4 @@
 /target
 /erl_crash.dump
+zig-out/
+zig-cache/

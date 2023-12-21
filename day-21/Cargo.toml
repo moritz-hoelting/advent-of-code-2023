@@ -1,0 +1,10 @@
+[package]
+name = "day-21"
+version = "0.0.0"
+edition = "2021"
+
+[dev-dependencies]
+indoc.workspace = true
+
+[dependencies]
+itertools.workspace = true
